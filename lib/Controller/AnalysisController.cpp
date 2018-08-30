@@ -446,13 +446,15 @@ AnalysisController::AnalysisController(
       }
       case DataFlowAnalysisType::Inter_Mono_TaintAnalysis: {
         const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
-        InterMonoTaintAnalysis inter(ICFG, EntryPoints);
+        TaintSensitiveFunctions TSF;
+        InterMonoTaintAnalysis inter(ICFG, TSF, EntryPoints);
         CallString<typename InterMonoTaintAnalysis::Node_t,
                    typename InterMonoTaintAnalysis::Domain_t, 10>
             Context;
         auto solver = make_LLVMBasedIMS(inter, Context, F, true);
         solver->solve();
         solver->dumpResults();
+        inter.printLeaks();
         break;
       }
       case DataFlowAnalysisType::Plugin: {

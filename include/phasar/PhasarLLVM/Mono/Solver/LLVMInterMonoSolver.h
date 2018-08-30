@@ -17,6 +17,7 @@
 #ifndef PHASAR_PHASARLLVM_MONO_SOLVER_LLVMINTERMONOSOLVER_H_
 #define PHASAR_PHASARLLVM_MONO_SOLVER_LLVMINTERMONOSOLVER_H_
 
+#include <iosfwd>
 #include <memory>
 
 #include <llvm/IR/Instruction.h>
@@ -82,8 +83,9 @@ public:
     // Iterate instructions
     for (auto &Node : IMSBase_t::Analysis) {
       std::cout << "------- Mono Start Result Record -------\n";
-      std::cout << "F: " << Node.first->getFunction()->getName().str()
-                << "   N: " << llvmIRToString(Node.first) << '\n';
+      std::cout << "N: " << llvmIRToString(Node.first)
+                << " || F: " << Node.first->getFunction()->getName().str()
+                << '\n';
       // Iterate call-string - flow fact set pairs
       for (auto &ContextFactPair : Node.second) {
         // Print the context
@@ -108,7 +110,6 @@ public:
         std::cout << IMSBase_t::IMProblem.DtoString(ContextFactPair.second)
                   << '\n';
         // }
-        // std::cout << "\n\n";
       }
     }
   };

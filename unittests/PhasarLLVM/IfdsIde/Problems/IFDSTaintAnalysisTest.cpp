@@ -1,4 +1,3 @@
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <phasar/DB/ProjectIRDB.h>
 #include <phasar/PhasarLLVM/ControlFlow/LLVMBasedICFG.h>
@@ -24,8 +23,8 @@ protected:
   IFDSTaintAnalysis *TaintProblem;
   TaintSensitiveFunctions *TSF;
 
-  IFDSTaintAnalysisTest() {}
-  virtual ~IFDSTaintAnalysisTest() {}
+  IFDSTaintAnalysisTest() = default;
+  virtual ~IFDSTaintAnalysisTest() = default;
 
   void Initialize(const std::vector<std::string> &IRFiles) {
     IRDB = new ProjectIRDB(IRFiles);
@@ -63,7 +62,7 @@ protected:
       }
       FoundLeaks.insert(make_pair(SinkId, LeakedValueIds));
     }
-    EXPECT_THAT(FoundLeaks, ::testing::ContainerEq(GroundTruth));
+    EXPECT_EQ(FoundLeaks, GroundTruth);
   }
 }; // Test Fixture
 

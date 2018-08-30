@@ -25,7 +25,7 @@ Analyses
 	ide_typestate - a simple type analysis - IDE
 	ide_lca - an IDE version of the linear constant propagation - IDE
 	intra_mono_fullconstpropagation - full constant propagation analysis - MONO
-	inter_mono_taintanalysis - taint analysis - MONO
+	inter_mono_taint - taint analysis - MONO
 
 	=== The analysis plugin mechanism ===
 	-D plugin --analysis_plugin <?>

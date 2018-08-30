@@ -116,7 +116,7 @@ void TaintSensitiveFunctions::importSourceSinkFunctions(
           }
         }
       } else {
-        cout << "No Source Functions found. Using default sink functions!\n";
+        cout << "No Source Functions found. Using default source functions!\n";
       }
       if (SSFunctions.find(SinkJSONId) != SSFunctions.end()) {
         // Discarding default sink functions

@@ -17,10 +17,12 @@
 #ifndef PHASAR_PHASARLLVM_MONO_PROBLEMS_INTERMONOTAINTANALYSIS_H_
 #define PHASAR_PHASARLLVM_MONO_PROBLEMS_INTERMONOTAINTANALYSIS_H_
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
 #include <phasar/PhasarLLVM/Mono/InterMonoProblem.h>
+#include <phasar/PhasarLLVM/Utils/TaintSensitiveFunctions.h>
 
 namespace llvm {
 class Instruction;
@@ -32,21 +34,35 @@ namespace psr {
 
 class LLVMBasedICFG;
 
+/**
+ * This analysis tracks data-flows through a program. Data flows from
+ * dedicated source functions, which generate tainted values, into
+ * dedicated sink functions. A leak is reported once a tainted value
+ * reached a sink function.
+ *
+ * @see TaintSensitiveFunctions on how to specify your own
+ * taint-sensitive source and sink functions.
+ */
 class InterMonoTaintAnalysis
     : public InterMonoProblem<const llvm::Instruction *,
                               MonoSet<const llvm::Value *>,
                               const llvm::Function *, LLVMBasedICFG &> {
 public:
   using Node_t = const llvm::Instruction *;
-  using Domain_t = MonoSet<const llvm::Value *>;
+  using DomainElement_t = const llvm::Value *;
+  using Domain_t = MonoSet<DomainElement_t>;
   using Method_t = const llvm::Function *;
   using ICFG_t = LLVMBasedICFG &;
 
+  /// Holds all leaks found during the analysis
+  std::map<Node_t, std::set<DomainElement_t>> Leaks;
+
 protected:
+  TaintSensitiveFunctions SourceSinkFunctions;
   std::vector<std::string> EntryPoints;
 
 public:
-  InterMonoTaintAnalysis(ICFG_t &Icfg,
+  InterMonoTaintAnalysis(ICFG_t &Icfg, TaintSensitiveFunctions TSF,
                          std::vector<std::string> EntryPoints = {"main"});
   virtual ~InterMonoTaintAnalysis() = default;
 
@@ -74,6 +90,8 @@ public:
   std::string NtoString(Node_t n) override;
 
   bool recompute(Method_t Callee) override;
+
+  void printLeaks() const;
 };
 
 } // namespace psr
