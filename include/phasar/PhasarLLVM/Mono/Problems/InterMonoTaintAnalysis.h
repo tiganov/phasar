@@ -64,6 +64,7 @@ protected:
 public:
   InterMonoTaintAnalysis(ICFG_t &Icfg, TaintSensitiveFunctions TSF,
                          std::vector<std::string> EntryPoints = {"main"});
+
   virtual ~InterMonoTaintAnalysis() = default;
 
   Domain_t join(const Domain_t &Lhs, const Domain_t &Rhs) override;

@@ -28,14 +28,14 @@
 namespace psr {
 
 /**
- * A call string stores a finite length chain of calls that lead to the
+ * A call string stores a finite length chain of calls that lead to a
  * function call.
  * @tparam N node in the ICFG
  * @tparam D domain of the analysis
  * @tparam K maximum depth of the call string
  */
 template <typename N, typename D, unsigned K>
-class CallString : public ContextBase<N, D, CallString<N, D, K>> {
+class CallString : public ContextBase<N, D> {
 public:
   using Node_t = N;
   using Domain_t = D;
@@ -76,21 +76,25 @@ public:
       return false;
   }
 
-  bool isEqual(const CallString &rhs) const override {
-    return cs == rhs.cs || (cs.size() == 0) || (rhs.cs.size() == 0);
+  bool isEqual(const ContextBase<N, D> &rhs) const override {
+    auto RhsCallStr = dynamic_cast<const CallString<N, D, K> &>(rhs);
+    return cs == RhsCallStr.cs || (cs.size() == 0) ||
+           (RhsCallStr.cs.size() == 0);
   }
 
-  bool isDifferent(const CallString &rhs) const override {
+  bool isDifferent(const ContextBase<N, D> &rhs) const override {
     return !isEqual(rhs);
   }
 
-  bool isLessThan(const CallString &rhs) const override {
+  bool isLessThan(const ContextBase<N, D> &rhs) const override {
+    auto RhsCallStr = dynamic_cast<const CallString<N, D, K> &>(rhs);
+    return cs < RhsCallStr.cs && (cs.size() != 0) &&
+           (RhsCallStr.cs.size() != 0);
     // Base : lhs.cs < rhs.cs
     // Addition : (lhs.cs.size() != 0) && (rhs.cs.size() != 0)
     // Enable that every empty call-string context match every context
     // That allows an output of a retFlow with an empty callString context
     // to be join with every analysis results at the arrival node.
-    return cs < rhs.cs && (cs.size() != 0) && (rhs.cs.size() != 0);
   }
 
   void print(std::ostream &os) const override {

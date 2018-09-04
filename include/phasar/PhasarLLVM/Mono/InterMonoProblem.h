@@ -30,13 +30,7 @@ public:
   using Node_t = N;
   using Domain_t = D;
   using Method_t = M;
-  using ICFG_t = std::remove_reference_t<I>;
-
-private:
-  template <typename T1, typename T2> void InterMonoProblem_check() {
-    static_assert(std::is_base_of<psr::ICFG<Node_t, Method_t>, ICFG_t>::value,
-                  "Template class I must be a sub class of ICFG<N, M>\n");
-  }
+  using ICFG_t = I;
 
 protected:
   ICFG_t &ICFG;

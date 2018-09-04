@@ -49,19 +49,6 @@ public:
 
   using analysis_t = MonoMap<Node_t, MonoMap<Context_t, Value_t>>;
 
-private:
-  void InterMonoGeneralizedSolver_check() {
-    static_assert(std::is_base_of<ContextBase<Node_t, Value_t, Context_t>,
-                                  Context_t>::value,
-                  "Context_t must be a sub class of ContextBase<Node_t, "
-                  "Value_t, Context_t>\n");
-    static_assert(
-        std::is_base_of<InterMonoProblem<Node_t, Value_t, Method_t, ICFG_t>,
-                        IMP_t>::value,
-        "IMP_t type must be a sub class of InterMonoProblem<Node_t, "
-        "Value_t, Method_t, ICFG_t>\n");
-  }
-
 protected:
   using edge_t = std::pair<Node_t, Node_t>;
   using priority_t = unsigned int;
@@ -161,7 +148,7 @@ protected:
     }
   }
 
-  virtual void GenerateCallEdge(Node_t dst) {
+  virtual void generateCallEdge(Node_t dst) {
     auto key = std::make_pair(current_priority + 1, current_context);
     for (auto callee : ICFG.getCalleesOfCallAt(dst)) {
       for (auto entry_point : ICFG.getStartPointsOf(callee)) {
@@ -276,7 +263,7 @@ public:
           if (ICFG.isCallStmt(dst)) {
             // The dst is a call stmt, we generate a call edge from the dst node
             // to the entry points of the callee function
-            GenerateCallEdge(dst);
+            generateCallEdge(dst);
           }
         } // Intra edge
 

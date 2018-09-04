@@ -33,8 +33,8 @@ using ICFG_t = InterMonoTaintAnalysis::ICFG_t;
 InterMonoTaintAnalysis::InterMonoTaintAnalysis(ICFG_t &Icfg,
                                                TaintSensitiveFunctions TSF,
                                                vector<string> EntryPoints)
-    : InterMonoProblem<Node_t, Domain_t, Method_t, ICFG_t>(Icfg),
-      SourceSinkFunctions(TSF), EntryPoints(EntryPoints) {}
+    : InterMonoProblem(Icfg), SourceSinkFunctions(TSF),
+      EntryPoints(EntryPoints) {}
 
 Domain_t InterMonoTaintAnalysis::join(const Domain_t &Lhs,
                                       const Domain_t &Rhs) {

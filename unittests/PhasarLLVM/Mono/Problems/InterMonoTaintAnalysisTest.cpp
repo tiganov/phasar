@@ -35,17 +35,18 @@ protected:
   // an vector of entry points.
   const std::vector<std::string> EntryPoints = {"main"};
 
-  ProjectIRDB *IRDB;
-  LLVMTypeHierarchy *TH;
-  LLVMBasedICFG *ICFG;
-  InterMonoTaintAnalysis *TaintProblem;
-  TaintSensitiveFunctions *TSF;
+  ProjectIRDB *IRDB = nullptr;
+  LLVMTypeHierarchy *TH = nullptr;
+  LLVMBasedICFG *ICFG = nullptr;
+  InterMonoTaintAnalysis *TaintProblem = nullptr;
+  TaintSensitiveFunctions *TSF = nullptr;
 
 public:
   InterMonoTaintAnalysisTest() = default;
   virtual ~InterMonoTaintAnalysisTest() = default;
 
   void Initialize(const std::vector<std::string> &IRFiles) {
+    cout << "inside initialize" << '\n';
     IRDB = new ProjectIRDB(IRFiles);
     IRDB->preprocessIR();
     TH = new LLVMTypeHierarchy(*IRDB);
@@ -57,15 +58,21 @@ public:
 
   void SetUp() override {
     bl::core::get()->set_logging_enabled(false);
-    ValueAnnotationPass::resetValueID();
+    if (IRDB)
+      ValueAnnotationPass::resetValueID();
   }
 
   void TearDown() override {
-    delete IRDB;
-    delete TH;
-    delete ICFG;
-    delete TaintProblem;
-    delete TSF;
+    if (IRDB)
+      delete IRDB;
+    if (TH)
+      delete TH;
+    if (ICFG)
+      delete ICFG;
+    if (TaintProblem)
+      delete TaintProblem;
+    if (TSF)
+      delete TSF;
   }
 
   // void compareResults(map<int, set<string>> &GroundTruth) {
@@ -91,15 +98,15 @@ TEST_F(InterMonoTaintAnalysisTest, IMTaintTest_01) {
   const llvm::Function *F =
       ICFG->getMethod("main"); /*IRDB.getFunction(EntryPoints.front());*/
   // LLVMInterMonoSolver solver(*TaintProblem,CS,F);
-  // auto S1 = make_LLVMBasedIMS(*TaintProblem, CS, F);
-  // S1->solve();
-  // S1->dumpResults();
+  auto S1 = make_LLVMBasedIMS(*TaintProblem, CS, F);
+  S1->solve();
+  S1->dumpResults();
 
-  // ValueBasedContext<typename InterMonoTaintAnalysis::Node_t,
-  //                   typename InterMonoTaintAnalysis::Domain_t>
-  //     VBC;
-  // auto S2 = make_LLVMBasedIMS(*TaintProblem, VBC, ICFG->getMethod("main"));
-  // S2->solve();
+  ValueBasedContext<typename InterMonoTaintAnalysis::Node_t,
+                    typename InterMonoTaintAnalysis::Domain_t>
+      VBC;
+  auto S2 = make_LLVMBasedIMS(*TaintProblem, VBC, ICFG->getMethod("main"));
+  S2->solve();
 }
 
 int main(int argc, char **argv) {

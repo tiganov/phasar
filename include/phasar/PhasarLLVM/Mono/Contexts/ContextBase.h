@@ -24,64 +24,46 @@ namespace psr {
 /**
  * Base class for function contexts used in the monotone framework. A function
  * context describes the state of the analyzed function.
- * @tparam N in the ICFG
+ * @tparam N node in the ICFG
  * @tparam D domain of the analysis
- * @tparam ConcreteContext class that implements the context (must be a sub
- * class of ContextBase<N,D,ConcreteContext>)
  */
-template <typename N, typename D, typename ConcreteContext> class ContextBase {
+template <typename N, typename D> class ContextBase {
 public:
   using Node_t = N;
   using Domain_t = D;
 
-private:
-  void ValueBase_check() {
-    static_assert(
-        std::is_base_of<ContextBase<Node_t, Domain_t, ConcreteContext>,
-                        ConcreteContext>::value,
-        "Template class ConcreteContext must be a sub class of ContextBase<N, "
-        "V, ConcreteContext>\n");
-  }
-
-public:
-  /*
-   * Update the context at the exit of a function
+  /**
+   * @brief Update the context when exiting a function
    */
   virtual void exitFunction(const Node_t src, const Node_t dest,
                             const Domain_t &In) = 0;
 
-  /*
-   *
+  /**
+   * @brief Update the context when entering a function
    */
   virtual void enterFunction(const Node_t src, const Node_t dest,
                              const Domain_t &In) = 0;
 
-  /*
-   *
-   */
   virtual bool isUnsure() = 0;
-
-  /*
-   *
-   */
-  virtual bool isEqual(const ConcreteContext &rhs) const = 0;
-  virtual bool isDifferent(const ConcreteContext &rhs) const = 0;
-  virtual bool isLessThan(const ConcreteContext &rhs) const = 0;
+  virtual bool isEqual(const ContextBase<N, D> &rhs) const = 0;
+  virtual bool isDifferent(const ContextBase<N, D> &rhs) const = 0;
+  virtual bool isLessThan(const ContextBase<N, D> &rhs) const = 0;
   virtual void print(std::ostream &os) const = 0;
 
-  friend bool operator==(const ConcreteContext &lhs,
-                         const ConcreteContext &rhs) {
+  friend bool operator==(const ContextBase<N, D> &lhs,
+                         const ContextBase<N, D> &rhs) {
     return lhs.isEqual(rhs);
   }
-  friend bool operator!=(const ConcreteContext &lhs,
-                         const ConcreteContext &rhs) {
+  friend bool operator!=(const ContextBase<N, D> &lhs,
+                         const ContextBase<N, D> &rhs) {
     return lhs.isDifferent(rhs);
   }
-  friend bool operator<(const ConcreteContext &lhs,
-                        const ConcreteContext &rhs) {
+  friend bool operator<(const ContextBase<N, D> &lhs,
+                        const ContextBase<N, D> &rhs) {
     return lhs.isLessThan(rhs);
   }
-  friend std::ostream &operator<<(std::ostream &os, const ConcreteContext &c) {
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const ContextBase<N, D> &c) {
     c.print(os);
     return os;
   }
