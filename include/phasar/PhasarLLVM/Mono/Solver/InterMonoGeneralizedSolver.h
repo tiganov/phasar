@@ -33,43 +33,45 @@ namespace psr {
  *
  * @tparam IMP_temp InterMonoProblem type
  * @tparam Context type (must be a derived class of ContextBase<N, V, Context>)
- * @tparam EdgeOrdering class function that state the order of edge evaluation
+ * @tparam O class function that state the order of edge evaluation
  */
-template <typename IMP_temp, typename Context, typename EdgeOrdering>
+template <typename N, typename D, typename M, typename I, typename C,
+          typename O>
 class InterMonoGeneralizedSolver {
 public:
-  using IMP_t = IMP_temp;
-  using Context_t = Context;
-  using Ordering_t = EdgeOrdering;
+  // using IMP_t = IMP_temp;
+  using Context_t = C;
+  using Ordering_t = O;
 
-  using Node_t = typename IMP_t::Node_t;
-  using Value_t = typename IMP_t::Domain_t;
-  using Method_t = typename IMP_t::Method_t;
-  using ICFG_t = typename IMP_t::ICFG_t;
+  using Node_t = N;
+  using Domain_t = D;
+  using Method_t = M;
+  using ICFG_t = I;
 
-  using analysis_t = MonoMap<Node_t, MonoMap<Context_t, Value_t>>;
+  using Analysis_t = MonoMap<Node_t, MonoMap<Context_t, Domain_t>>;
 
 protected:
-  using edge_t = std::pair<Node_t, Node_t>;
-  using priority_t = unsigned int;
-  using WorkListKey_t = std::pair<priority_t, Context_t>;
-  using WorkListValue_t = std::set<edge_t, Ordering_t>;
+  using Edge_t = std::pair<Node_t, Node_t>;
+  using Priority_t = unsigned int;
+  using WorkListKey_t = std::pair<Priority_t, Context_t>;
+  using WorkListValue_t = std::set<Edge_t, Ordering_t>;
 
-  IMP_t &IMProblem;
   std::map<WorkListKey_t, WorkListValue_t, std::greater<WorkListKey_t>>
       Worklist;
 
   using WL_first_it_t = typename decltype(Worklist)::iterator;
   using WL_second_const_it_t =
       typename decltype(Worklist)::mapped_type::const_iterator;
-  analysis_t Analysis;
+
+  InterMonoProblem<N, D, M, I> &IMProblem;
+  Analysis_t Analysis;
   ICFG_t &ICFG;
 
   Context_t current_context;
-  priority_t current_priority = 0;
+  Priority_t current_priority = 0;
   WL_first_it_t current_it_on_priority;
   WL_second_const_it_t current_it_on_edge;
-  std::set<edge_t> call_edges;
+  std::set<Edge_t> call_edges;
 
   // TODO: initialize the Analysis map with different contexts
   // void initialize_with_context() {
@@ -97,19 +99,19 @@ protected:
   }
 
   virtual void analyse_function(Method_t method, Context_t &new_context,
-                                priority_t new_priority) {
-    std::vector<edge_t> edges = ICFG.getAllControlFlowEdges(method);
+                                Priority_t new_priority) {
+    std::vector<Edge_t> edges = ICFG.getAllControlFlowEdges(method);
     auto current_pair = std::make_pair(new_priority, new_context);
     Worklist[current_pair].insert(edges.begin(), edges.end());
   }
 
-  bool isIntraEdge(const edge_t &edge) const {
+  bool isIntraEdge(const Edge_t &edge) const {
     return ICFG.getMethodOf(edge.first) == ICFG.getMethodOf(edge.second);
   }
 
-  bool isCallEdge(const edge_t &edge) const { return call_edges.count(edge); }
+  bool isCallEdge(const Edge_t &edge) const { return call_edges.count(edge); }
 
-  bool isReturnEdge(const edge_t &edge) const {
+  bool isReturnEdge(const Edge_t &edge) const {
     return !isIntraEdge(edge) && ICFG.isExitStmt(edge.first);
   }
 
@@ -168,7 +170,8 @@ protected:
   }
 
 public:
-  InterMonoGeneralizedSolver(IMP_t &IMP, Context_t &context, Method_t method)
+  InterMonoGeneralizedSolver(InterMonoProblem<N, D, M, I> &IMP,
+                             Context_t &context, Method_t method)
       : IMProblem(IMP), ICFG(IMP.getICFG()), current_context(context) {
     initialize();
     analyse_function(method);
@@ -182,7 +185,7 @@ public:
   InterMonoGeneralizedSolver &
   operator=(InterMonoGeneralizedSolver &&move) = delete;
 
-  analysis_t &getAnalysisResults() { return Analysis; }
+  Analysis_t &getAnalysisResults() { return Analysis; }
 
   virtual void solve() {
     while (!isWLempty()) {
@@ -192,7 +195,7 @@ public:
       const auto &src = edge.first;
       const auto &dst = edge.second;
 
-      Value_t Out;
+      Domain_t Out;
 
       Context_t src_context(current_context);
       Context_t dst_context(src_context);

@@ -17,7 +17,7 @@
 #ifndef PHASAR_PHASARLLVM_MONO_SOLVER_LLVMINTERMONOSOLVER_H_
 #define PHASAR_PHASARLLVM_MONO_SOLVER_LLVMINTERMONOSOLVER_H_
 
-#include <iosfwd>
+#include <iostream>
 #include <memory>
 
 #include <llvm/IR/Instruction.h>
@@ -46,25 +46,27 @@ struct LLVMOrderingById {
   }
 };
 
-template <typename D, class Context, class Ordering = LLVMOrderingById>
+template <typename Domain, typename Context,
+          typename Ordering = LLVMOrderingById>
 class LLVMInterMonoSolver
-    : public InterMonoGeneralizedSolver<
-          InterMonoProblem<const llvm::Instruction *, D, const llvm::Function *,
-                           LLVMBasedICFG &>,
-          Context, Ordering> {
+    : public InterMonoGeneralizedSolver<const llvm::Instruction *, Domain,
+                                        const llvm::Function *, LLVMBasedICFG &,
+                                        Context, Ordering> {
 public:
-  using IMSBase_t = InterMonoGeneralizedSolver<
-      InterMonoProblem<const llvm::Instruction *, D, const llvm::Function *,
-                       LLVMBasedICFG &>,
-      Context, Ordering>;
+  using IMSBase_t =
+      InterMonoGeneralizedSolver<const llvm::Instruction *, Domain,
+                                 const llvm::Function *, LLVMBasedICFG &,
+                                 Context, Ordering>;
 
 protected:
   bool DUMP_RESULTS;
 
 public:
-  LLVMInterMonoSolver(typename IMSBase_t::IMP_t &IMP, Context &_Context,
-                      const llvm::Function *Method, bool dump = false)
-      : IMSBase_t(IMP, _Context, Method), DUMP_RESULTS(dump) {}
+  LLVMInterMonoSolver(
+      InterMonoProblem<const llvm::Instruction *, Domain,
+                       const llvm::Function *, LLVMBasedICFG &> &IMP,
+      Context &context, const llvm::Function *method, bool dump = false)
+      : IMSBase_t(IMP, context, method), DUMP_RESULTS(dump) {}
   virtual ~LLVMInterMonoSolver() = default;
 
   LLVMInterMonoSolver(const LLVMInterMonoSolver &copy) = delete;
@@ -75,8 +77,8 @@ public:
   /**
    * Dumps monotone solver results to the commandline.
    * WARNING: Currently, this will only work with CallStrings! It is only a
-   * temporarily since the Context's print functionality is broken at the moment
-   * :(
+   * temporarily workaround since the Context's print functionality is broken at
+   * the moment.
    */
   void dumpResults() {
     std::cout << "======= DUMP LLVM-INTER-MONOTONE-SOLVER RESULTS =======\n";
@@ -114,17 +116,6 @@ public:
     }
   };
 };
-
-template <typename IMP_t, typename Context_t,
-          typename Ordering_t = LLVMOrderingById>
-auto make_LLVMBasedIMS(IMP_t &IMP, Context_t &Context,
-                       typename IMP_t::Method_t Method, bool dump = false)
-    -> std::unique_ptr<
-        LLVMInterMonoSolver<typename IMP_t::Domain_t, Context_t, Ordering_t>> {
-  using ptr_t =
-      LLVMInterMonoSolver<typename IMP_t::Domain_t, Context_t, Ordering_t>;
-  return std::make_unique<ptr_t>(IMP, Context, Method, dump);
-}
 
 // template <typename V, unsigned K, class Ordering = LLVMOrderingById>
 // class LLVMInterMonoCallStringSolver

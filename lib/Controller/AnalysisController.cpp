@@ -440,8 +440,10 @@ AnalysisController::AnalysisController(
         CallString<typename InterMonoSolverTest::Node_t,
                    typename InterMonoSolverTest::Domain_t, 3>
             Context;
-        auto solver = make_LLVMBasedIMS(inter, Context, F, true);
-        solver->solve();
+        LLVMInterMonoSolver<typename InterMonoSolverTest::Domain_t,
+                            decltype(Context)>
+            solver(inter, Context, F, true);
+        solver.solve();
         break;
       }
       case DataFlowAnalysisType::Inter_Mono_TaintAnalysis: {
@@ -451,9 +453,11 @@ AnalysisController::AnalysisController(
         CallString<typename InterMonoTaintAnalysis::Node_t,
                    typename InterMonoTaintAnalysis::Domain_t, 10>
             Context;
-        auto solver = make_LLVMBasedIMS(inter, Context, F, true);
-        solver->solve();
-        solver->dumpResults();
+        LLVMInterMonoSolver<typename InterMonoSolverTest::Domain_t,
+                            decltype(Context)>
+            solver(inter, Context, F, true);
+        solver.solve();
+        solver.dumpResults();
         inter.printLeaks();
         break;
       }
