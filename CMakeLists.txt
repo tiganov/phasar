@@ -8,7 +8,7 @@ project (phasar)
 set(CMAKE_PROJECT_NAME "phasar")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -64,10 +64,21 @@ if (PHASAR_ENABLE_PIC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif (PHASAR_ENABLE_PIC)
 
-option(PHASAR_ENABLE_PAMM "Enable the performance measurement mechanism" OFF)
-if (PHASAR_ENABLE_PAMM)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPERFORMANCE_EVA")
-endif (PHASAR_ENABLE_PAMM)
+if (NOT PHASAR_ENABLE_PAMM)
+  set(PHASAR_ENABLE_PAMM "Off" CACHE STRING "Enable the performance measurement mechanism ('Off', 'Core' or 'Full', default is 'Off')" FORCE)
+  set_property(CACHE PHASAR_ENABLE_PAMM PROPERTY STRINGS "Off" "Core" "Full")
+endif()
+if(PHASAR_ENABLE_PAMM STREQUAL "Core" AND NOT PHASAR_BUILD_UNITTESTS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPAMM_CORE")
+  message("PAMM metric severity level: Core")
+elseif(PHASAR_ENABLE_PAMM STREQUAL "Full" AND NOT PHASAR_BUILD_UNITTESTS)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPAMM_FULL")
+  message("PAMM metric severity level: Full")
+elseif(PHASAR_BUILD_UNITTESTS)
+  message("PAMM metric severity level: Off (due to unittests)")
+else()
+  message("PAMM metric severity level: Off")
+endif()
 
 # Workaround: Remove Plugins for MacOS for now
 if(APPLE)
@@ -92,6 +103,10 @@ include_directories(external/json/src)
 add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 include_directories(external/googletest/googletest/include)
 include_directories(external/googletest/googlemock/include)
+
+# WALi-OpenNWA
+add_subdirectory(external/WALi-OpenNWA)
+include_directories(external/WALi-OpenNWA/Source/wali/include)
 
 # Boost
 find_package(Boost COMPONENTS filesystem graph system program_options log thread REQUIRED)
@@ -164,10 +179,6 @@ set(CLANG_LIBRARIES
 # Add the Phasar subdirectories
 add_subdirectory(include)
 add_subdirectory(lib)
-
-# add_phasar_executable(phasar
-#  tools/phasar/phasar.cpp
-# )
 
 # Build a stand-alone executable
 add_executable(phasar

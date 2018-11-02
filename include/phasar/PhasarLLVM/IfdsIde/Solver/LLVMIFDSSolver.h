@@ -27,7 +27,8 @@
 #include <phasar/PhasarLLVM/ControlFlow/ICFG.h>
 #include <phasar/PhasarLLVM/IfdsIde/IFDSTabulationProblem.h>
 #include <phasar/PhasarLLVM/IfdsIde/Solver/IFDSSolver.h>
-#include <phasar/Utils/PAMM.h>
+#include <phasar/PhasarLLVM/IfdsIde/Solver/SolverResults.h>
+#include <phasar/Utils/PAMMMacros.h>
 #include <phasar/Utils/Table.h>
 
 using json = nlohmann::json;
@@ -38,32 +39,44 @@ template <typename D, typename I>
 class LLVMIFDSSolver : public IFDSSolver<const llvm::Instruction *, D,
                                          const llvm::Function *, I> {
 private:
-  const bool DUMP_RESULTS;
   IFDSTabulationProblem<const llvm::Instruction *, D, const llvm::Function *, I>
       &Problem;
+  const bool DUMP_RESULTS;
+  const bool PRINT_REPORT;
 
 public:
   virtual ~LLVMIFDSSolver() = default;
 
   LLVMIFDSSolver(IFDSTabulationProblem<const llvm::Instruction *, D,
                                        const llvm::Function *, I> &problem,
-                 bool dumpResults = false)
+                 bool dumpResults = false, bool printReport = true)
       : IFDSSolver<const llvm::Instruction *, D, const llvm::Function *, I>(
             problem),
-        DUMP_RESULTS(dumpResults), Problem(problem) {}
+        Problem(problem), DUMP_RESULTS(dumpResults), PRINT_REPORT(printReport) {
+  }
 
   virtual void solve() override {
     // Solve the analaysis problem
     IFDSSolver<const llvm::Instruction *, D, const llvm::Function *,
                I>::solve();
     bl::core::get()->flush();
-    if (DUMP_RESULTS)
+    if (DUMP_RESULTS) {
       dumpResults();
+    }
+    if (PRINT_REPORT) {
+      printReport();
+    }
+  }
+
+  void printReport() {
+    SolverResults<const llvm::Instruction *, D, BinaryDomain> SR(
+        this->valtab, Problem.zeroValue());
+    Problem.printIFDSReport(std::cout, SR);
   }
 
   void dumpResults() {
-    PAMM_FACTORY;
-    START_TIMER("DFA Result Dumping");
+    PAMM_GET_INSTANCE;
+    START_TIMER("DFA IFDS Result Dumping", PAMM_SEVERITY_LEVEL::Full);
     std::cout << "### DUMP LLVMIFDSSolver results\n";
     auto results = this->valtab.cellSet();
     if (results.empty()) {
@@ -98,7 +111,8 @@ public:
                   << "\tV:  " << cells[i].v << "\n";
       }
     }
-    STOP_TIMER("DFA Result Dumping");
+    std::cout << '\n';
+    STOP_TIMER("DFA IFDS Result Dumping", PAMM_SEVERITY_LEVEL::Full);
   }
 
   json getJsonRepresentationForInstructionNode(const llvm::Instruction *node) {

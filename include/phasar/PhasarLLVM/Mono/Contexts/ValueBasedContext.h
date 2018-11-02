@@ -45,11 +45,14 @@ public:
   using Domain_t = D;
 
 protected:
+  const NodePrinter<N> *NP;
+  const DataFlowFactPrinter<D> *DP;
   Domain_t args;
   Domain_t prev_context_args;
 
 public:
-  ValueBasedContext() = default;
+  ValueBasedContext(const NodePrinter<N> *np, const DataFlowFactPrinter<D> *dp)
+      : /*ContextBase<N, D>(np, dp)*/ NP(np), DP(dp) {}
 
   void enterFunction(const Node_t src, const Node_t dest,
                      const Domain_t &In) override {
@@ -134,14 +137,22 @@ public:
   using IdGen_t = IdGenerator;
 
 protected:
+  const NodePrinter<Node> *NP;
+  const DataFlowFactPrinter<Domain_t> *DP;
   Domain_t args;
   Domain_t prev_context_args;
   IdGen_t IdGen;
 
 public:
-  MappedValueBasedContext() = default;
+  MappedValueBasedContext(const NodePrinter<Node> *np,
+                          const DataFlowFactPrinter<Domain_t> *dp)
+      : /*ContextBase<Node, Map<Key, Value>>(np, dp)*/ NP(np), DP(dp) {}
 
-  MappedValueBasedContext(IdGen_t &IdGen) : IdGen(IdGen) {}
+  MappedValueBasedContext(const NodePrinter<Node> *np,
+                          const DataFlowFactPrinter<Domain_t> *dp,
+                          IdGen_t &_IdGen)
+      : /*ContextBase<Node, Map<Key, Value>>(np, dp)*/ NP(np), DP(dp),
+        IdGen(_IdGen) {}
 
   template <class T>
   MappedValueBasedContext(T &&args, T &&prev_context_args)

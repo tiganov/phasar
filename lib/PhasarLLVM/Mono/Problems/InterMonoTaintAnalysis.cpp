@@ -264,20 +264,18 @@ MonoMap<Node_t, Domain_t> InterMonoTaintAnalysis::initialSeeds() {
   return Seeds;
 }
 
-string InterMonoTaintAnalysis::DtoString(const Domain_t d) {
-  string str;
+void InterMonoTaintAnalysis::printNode(ostream &os, Node_t n) const {
+  os << llvmIRToString(n);
+}
+
+void InterMonoTaintAnalysis::printDataFlowFact(ostream &os, Domain_t d) const {
   for (auto fact : d) {
-    str += llvmIRToString(fact) + '\n';
+    os << llvmIRToString(fact) << '\n';
   }
-  return str;
 }
 
-string InterMonoTaintAnalysis::MtoString(const Method_t m) {
-  return m->getName().str();
-}
-
-string InterMonoTaintAnalysis::NtoString(const Node_t n) {
-  return llvmIRToString(n);
+void InterMonoTaintAnalysis::printMethod(ostream &os, Method_t m) const {
+  os << m->getName().str();
 }
 
 bool InterMonoTaintAnalysis::recompute(const Method_t Callee) { return false; }

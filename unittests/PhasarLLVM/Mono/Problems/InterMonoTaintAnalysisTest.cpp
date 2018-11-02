@@ -91,10 +91,10 @@ public:
 }; // Test Fixture
 
 TEST_F(InterMonoTaintAnalysisTest, IMTaintTest_01) {
-  Initialize({pathToLLFiles + "dummy_source_sink/taint_01.ll"});
+  Initialize({pathToLLFiles + "dummy_source_sink/taint_01_cpp_dbg.ll"});
   CallString<typename InterMonoTaintAnalysis::Node_t,
              typename InterMonoTaintAnalysis::Domain_t, 2>
-      CS;
+      CS(TaintProblem, TaintProblem);
   const llvm::Function *F =
       ICFG->getMethod("main"); /*IRDB.getFunction(EntryPoints.front());*/
   LLVMInterMonoSolver<typename InterMonoTaintAnalysis::Domain_t, decltype(CS)>
@@ -104,7 +104,7 @@ TEST_F(InterMonoTaintAnalysisTest, IMTaintTest_01) {
 
   ValueBasedContext<typename InterMonoTaintAnalysis::Node_t,
                     typename InterMonoTaintAnalysis::Domain_t>
-      VBC;
+      VBC(TaintProblem, TaintProblem);
   LLVMInterMonoSolver<typename InterMonoTaintAnalysis::Domain_t, decltype(VBC)>
       S2(*TaintProblem, VBC, F, true);
   S2.solve();

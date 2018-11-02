@@ -7,8 +7,6 @@
  *     Philipp Schubert and others
  *****************************************************************************/
 
-#include <iostream> // needed for printLeaks()
-
 #include <llvm/IR/CallSite.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Value.h>
@@ -26,6 +24,7 @@
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSTaintAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/SpecialSummaries.h>
 
+#include <phasar/Utils/LLVMIRToSrc.h>
 #include <phasar/Utils/LLVMShorthands.h>
 #include <phasar/Utils/Logger.h>
 
@@ -92,12 +91,13 @@ IFDSTaintAnalysis::getCallFlowFunction(IFDSTaintAnalysis::n_t callStmt,
   auto &lg = lg::get();
   LOG_IF_ENABLE(BOOST_LOG_SEV(lg, DEBUG)
                 << "IFDSTaintAnalysis::getCallFlowFunction()");
+  string FunctionName = cxx_demangle(destMthd->getName().str());
   // Check if a source or sink function is called:
   // We then can kill all data-flow facts not following the called function.
   // The respective taints or leaks are then generated in the corresponding
   // call to return flow function.
-  if (SourceSinkFunctions.isSource(destMthd->getName().str()) ||
-      (SourceSinkFunctions.isSink(destMthd->getName().str()))) {
+  if (SourceSinkFunctions.isSource(FunctionName) ||
+      (SourceSinkFunctions.isSink(FunctionName))) {
     return KillAll<IFDSTaintAnalysis::d_t>::getInstance();
   }
   // Map the actual into the formal parameters
@@ -206,7 +206,7 @@ IFDSTaintAnalysis::getSummaryFlowFunction(IFDSTaintAnalysis::n_t callStmt,
                                           IFDSTaintAnalysis::m_t destMthd) {
   SpecialSummaries<IFDSTaintAnalysis::d_t> &specialSummaries =
       SpecialSummaries<IFDSTaintAnalysis::d_t>::getInstance();
-  string FunctionName = destMthd->getName().str();
+  string FunctionName = cxx_demangle(destMthd->getName().str());
   // If we have a special summary, which is neither a source function, nor
   // a sink function, then we provide it to the solver.
   if (specialSummaries.containsSpecialSummary(FunctionName) &&
@@ -257,31 +257,43 @@ bool IFDSTaintAnalysis::isZeroValue(IFDSTaintAnalysis::d_t d) const {
   return isLLVMZeroValue(d);
 }
 
-string IFDSTaintAnalysis::DtoString(IFDSTaintAnalysis::d_t d) const {
-  return llvmIRToString(d);
+void IFDSTaintAnalysis::printNode(ostream &os, IFDSTaintAnalysis::n_t n) const {
+  os << llvmIRToString(n);
 }
 
-string IFDSTaintAnalysis::NtoString(IFDSTaintAnalysis::n_t n) const {
-  return llvmIRToString(n);
+void IFDSTaintAnalysis::printDataFlowFact(ostream &os,
+                                          IFDSTaintAnalysis::d_t d) const {
+  os << llvmIRToString(d);
 }
 
-string IFDSTaintAnalysis::MtoString(IFDSTaintAnalysis::m_t m) const {
-  return m->getName().str();
+void IFDSTaintAnalysis::printMethod(ostream &os,
+                                    IFDSTaintAnalysis::m_t m) const {
+  os << m->getName().str();
 }
 
-void IFDSTaintAnalysis::printLeaks() const {
-  cout << "\n----- Found the following leaks -----\n";
+void IFDSTaintAnalysis::printIFDSReport(
+    std::ostream &os, SolverResults<n_t, d_t, BinaryDomain> &SR) {
+  os << "\n----- Found the following leaks -----\n";
   if (Leaks.empty()) {
-    cout << "No leaks found!\n";
+    os << "No leaks found!\n";
   } else {
     for (auto Leak : Leaks) {
-      string ModuleName = getModuleFromVal(Leak.first)->getModuleIdentifier();
-      cout << "At instruction:  '" << llvmIRToString(Leak.first) << "'\n";
-      cout << "In file:         '" << ModuleName << "'\n";
-      for (auto LeakValue : Leak.second) {
-        cout << "Leak:            '" << llvmIRToString(LeakValue) << "'\n";
+      os << "At instruction\nIR  : " << llvmIRToString(Leak.first) << '\n';
+      os << llvmValueToSrc(Leak.first);
+      os << "\n\nLeak(s):\n";
+      for (auto LeakedValue : Leak.second) {
+        os << "IR  : ";
+        // Get the actual leaked alloca instruction if possible
+        if (auto Load = llvm::dyn_cast<llvm::LoadInst>(LeakedValue)) {
+          os << llvmIRToString(Load->getPointerOperand()) << '\n'
+             << llvmValueToSrc(Load->getPointerOperand()) << '\n';
+
+        } else {
+          os << llvmIRToString(LeakedValue) << '\n'
+             << llvmValueToSrc(LeakedValue) << '\n';
+        }
       }
-      cout << "-------------------\n";
+      os << "-------------------\n";
     }
   }
 }

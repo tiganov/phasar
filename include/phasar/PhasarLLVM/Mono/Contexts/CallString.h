@@ -21,7 +21,6 @@
 #include <deque>
 #include <initializer_list>
 #include <iterator>
-#include <ostream>
 
 #include <phasar/PhasarLLVM/Mono/Contexts/ContextBase.h>
 
@@ -41,12 +40,19 @@ public:
   using Domain_t = D;
 
 protected:
+  const NodePrinter<N> *NP;
+  const DataFlowFactPrinter<D> *DP;
   std::deque<Node_t> cs;
   static const unsigned k = K;
 
 public:
-  CallString() = default;
-  CallString(std::initializer_list<Node_t> ilist) : cs(ilist) {
+  CallString(const NodePrinter<N> *np, const DataFlowFactPrinter<D> *dp)
+      : NP(np), DP(dp)
+  /*: ContextBase<N, D>(np, dp)*/ {}
+
+  CallString(const NodePrinter<N> *np, const DataFlowFactPrinter<D> *dp,
+             std::initializer_list<N> ilist)
+      : /*ContextBase<N, D>(np, dp), */ NP(np), DP(dp), cs(ilist) {
     if (ilist.size() > k) {
       throw std::runtime_error(
           "initial call std::string length exceeds maximal length K");
@@ -98,8 +104,10 @@ public:
   }
 
   void print(std::ostream &os) const override {
-    std::copy(cs.begin(), --cs.end(), std::ostream_iterator<Node_t>(os, " * "));
-    os << cs.back();
+    os << "Call string [" << cs.size() << "]: ";
+    for (auto C : cs) {
+      os << this->NP->NtoString(C) << " * ";
+    }
   }
 
   std::size_t size() const { return cs.size(); }

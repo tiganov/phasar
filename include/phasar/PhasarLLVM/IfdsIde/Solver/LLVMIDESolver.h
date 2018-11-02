@@ -33,17 +33,19 @@ template <typename D, typename V, typename I>
 class LLVMIDESolver : public IDESolver<const llvm::Instruction *, D,
                                        const llvm::Function *, V, I> {
 private:
-  const bool DUMP_RESULTS;
   IDETabulationProblem<const llvm::Instruction *, D, const llvm::Function *, V,
                        I> &Problem;
+  const bool DUMP_RESULTS;
+  const bool PRINT_REPORT;
 
 public:
   LLVMIDESolver(IDETabulationProblem<const llvm::Instruction *, D,
                                      const llvm::Function *, V, I> &problem,
-                bool dumpResults = false)
+                bool dumpResults = false, bool printReport = true)
       : IDESolver<const llvm::Instruction *, D, const llvm::Function *, V, I>(
             problem),
-        DUMP_RESULTS(dumpResults), Problem(problem) {}
+        Problem(problem), DUMP_RESULTS(dumpResults), PRINT_REPORT(printReport) {
+  }
 
   virtual ~LLVMIDESolver() = default;
 
@@ -51,11 +53,23 @@ public:
     IDESolver<const llvm::Instruction *, D, const llvm::Function *, V,
               I>::solve();
     bl::core::get()->flush();
-    if (DUMP_RESULTS)
+    if (DUMP_RESULTS) {
       dumpResults();
+    }
+    if (PRINT_REPORT) {
+      printReport();
+    }
+  }
+
+  void printReport() {
+    SolverResults<const llvm::Instruction *, D, V> SR(this->valtab,
+                                                      Problem.zeroValue());
+    Problem.printIDEReport(std::cout, SR);
   }
 
   void dumpResults() {
+    PAMM_GET_INSTANCE;
+    START_TIMER("DFA IDE Result Dumping", PAMM_SEVERITY_LEVEL::Full);
     std::cout << "### DUMP LLVMIDESolver results\n";
     // for the following line have a look at:
     // http://stackoverflow.com/questions/1120833/derived-template-class-access-to-base-class-member-data
@@ -91,6 +105,8 @@ public:
                   << "\tV:  " << Problem.VtoString(cells[i].v) << "\n";
       }
     }
+    std::cout << '\n';
+    STOP_TIMER("DFA IDE Result Dumping", PAMM_SEVERITY_LEVEL::Full);
   }
 
   json getJsonRepresentationForInstructionNode(const llvm::Instruction *node) {

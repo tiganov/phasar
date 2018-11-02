@@ -27,7 +27,7 @@ class Value;
 namespace psr {
 class LLVMBasedICFG;
 
-enum State { uninit = 0, error };
+enum State { uninit = 0, opened, closed, error };
 
 class IDETypeStateAnalysis
     : public DefaultIDETabulationProblem<
@@ -93,8 +93,8 @@ public:
                         d_t exitNode, n_t reSite, d_t retNode) override;
 
   std::shared_ptr<EdgeFunction<v_t>>
-  getCallToReturnEdgeFunction(n_t callSite, d_t callNode, n_t retSite,
-                              d_t retSiteNode) override;
+  getCallToRetEdgeFunction(n_t callSite, d_t callNode, n_t retSite,
+                           d_t retSiteNode, std::set<m_t> callees) override;
 
   std::shared_ptr<EdgeFunction<v_t>>
   getSummaryEdgeFunction(n_t callStmt, d_t callNode, n_t retSite,
@@ -108,13 +108,22 @@ public:
 
   std::shared_ptr<EdgeFunction<v_t>> allTopFunction() override;
 
-  std::string DtoString(d_t d) const override;
+  enum class State { uninit = 0, opened, closed, error };
 
-  std::string VtoString(v_t v) const override;
+  enum class CurrentState {
+    state_fopen = 0,
+    state_fclose,
+    state_star,
+    state_freopen
+  };
 
-  std::string NtoString(n_t n) const override;
+  void printNode(std::ostream &os, n_t d) const override;
 
-  std::string MtoString(m_t m) const override;
+  void printDataFlowFact(std::ostream &os, d_t d) const override;
+
+  void printMethod(std::ostream &os, m_t m) const override;
+
+  void printValue(std::ostream &os, v_t v) const override;
 };
 
 } // namespace psr
