@@ -111,4 +111,4 @@ void IFDSLiveVariableAnalysis::printMethod(
   os << m->getName().str();
 }
 
-}  // namespace psr
+} // namespace psr

@@ -27,11 +27,11 @@
 #include <phasar/PhasarLLVM/IfdsIde/LLVMZeroValue.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IDELinearConstantAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IDESolverTest.h>
-#include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSLiveVariableAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IDETaintAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IDETypeStateAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSConstAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSLinearConstantAnalysis.h>
+#include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSLiveVariableAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSSolverTest.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSTaintAnalysis.h>
 #include <phasar/PhasarLLVM/IfdsIde/Problems/IFDSTypeAnalysis.h>
@@ -90,9 +90,9 @@ AnalysisController::AnalysisController(
     }
     if (invalidEntryPoints.size()) {
       for (auto &invalidEntryPoint : invalidEntryPoints) {
-        LOG_IF_ENABLE(BOOST_LOG_SEV(lg, ERROR) << "Entry point '"
-                                               << invalidEntryPoint
-                                               << "' is not valid.");
+        LOG_IF_ENABLE(BOOST_LOG_SEV(lg, ERROR)
+                      << "Entry point '" << invalidEntryPoint
+                      << "' is not valid.");
       }
       throw logic_error("invalid entry points");
     }
@@ -193,193 +193,190 @@ AnalysisController::AnalysisController(
      * Perform all the analysis that the user has chosen.
      */
     for (DataFlowAnalysisType analysis : Analyses) {
-      LOG_IF_ENABLE(BOOST_LOG_SEV(lg, INFO) << "Performing analysis: "
-                                            << analysis);
+      LOG_IF_ENABLE(BOOST_LOG_SEV(lg, INFO)
+                    << "Performing analysis: " << analysis);
       switch (analysis) {
-        case DataFlowAnalysisType::IFDS_TaintAnalysis: {
-          TaintSensitiveFunctions TSF;
-          IFDSTaintAnalysis TaintAnalysisProblem(ICFG, TSF, EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> LLVMTaintSolver(
-              TaintAnalysisProblem, false);
-          cout << "IFDS Taint Analysis ..." << endl;
-          LLVMTaintSolver.solve();
-          cout << "IFDS Taint Analysis ended" << endl;
-          // FinalResultsJson += LLVMTaintSolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            LLVMTaintSolver.exportJson(graph_id);
-          }
-          break;
+      case DataFlowAnalysisType::IFDS_TaintAnalysis: {
+        TaintSensitiveFunctions TSF;
+        IFDSTaintAnalysis TaintAnalysisProblem(ICFG, TSF, EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> LLVMTaintSolver(
+            TaintAnalysisProblem, false);
+        cout << "IFDS Taint Analysis ..." << endl;
+        LLVMTaintSolver.solve();
+        cout << "IFDS Taint Analysis ended" << endl;
+        // FinalResultsJson += LLVMTaintSolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          LLVMTaintSolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IDE_TaintAnalysis: {
-          IDETaintAnalysis taintanalysisproblem(ICFG, EntryPoints);
-          LLVMIDESolver<const llvm::Value *, const llvm::Value *,
-                        LLVMBasedICFG &>
-              llvmtaintsolver(taintanalysisproblem, true);
-          llvmtaintsolver.solve();
-          FinalResultsJson += llvmtaintsolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmtaintsolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IDE_TaintAnalysis: {
+        IDETaintAnalysis taintanalysisproblem(ICFG, EntryPoints);
+        LLVMIDESolver<const llvm::Value *, const llvm::Value *, LLVMBasedICFG &>
+            llvmtaintsolver(taintanalysisproblem, true);
+        llvmtaintsolver.solve();
+        FinalResultsJson += llvmtaintsolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmtaintsolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IDE_TypeStateAnalysis: {
-          IDETypeStateAnalysis typestateproblem(ICFG, "struct._IO_FILE",
-                                                EntryPoints);
-          LLVMIDESolver<const llvm::Value *, State, LLVMBasedICFG &>
-              llvmtypestatesolver(typestateproblem, true);
-          llvmtypestatesolver.solve();
-          FinalResultsJson += llvmtypestatesolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmtypestatesolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IDE_TypeStateAnalysis: {
+        IDETypeStateAnalysis typestateproblem(ICFG, "struct._IO_FILE",
+                                              EntryPoints);
+        LLVMIDESolver<const llvm::Value *, State, LLVMBasedICFG &>
+            llvmtypestatesolver(typestateproblem, true);
+        llvmtypestatesolver.solve();
+        FinalResultsJson += llvmtypestatesolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmtypestatesolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_LiveVariableAnalysis: {
-          IFDSLiveVariableAnalysis livevarproblem(ICFG, EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmlivevarsolver(
-              livevarproblem, true, true);
-          cout << "IFDS LiveVar Analysis ..." << endl;
-          llvmlivevarsolver.solve();
-          cout << "IFDS LiveVar Analysis ended" << endl;
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_LiveVariableAnalysis: {
+        IFDSLiveVariableAnalysis livevarproblem(ICFG, EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmlivevarsolver(
+            livevarproblem, true, true);
+        cout << "IFDS LiveVar Analysis ..." << endl;
+        llvmlivevarsolver.solve();
+        cout << "IFDS LiveVar Analysis ended" << endl;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_TypeAnalysis: {
+        IFDSTypeAnalysis typeanalysisproblem(ICFG, EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmtypesolver(
+            typeanalysisproblem, true);
+        llvmtypesolver.solve();
+        FinalResultsJson += llvmtypesolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmtypesolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_TypeAnalysis: {
-          IFDSTypeAnalysis typeanalysisproblem(ICFG, EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmtypesolver(
-              typeanalysisproblem, true);
-          llvmtypesolver.solve();
-          FinalResultsJson += llvmtypesolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmtypesolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_UninitializedVariables: {
+        IFDSUnitializedVariables uninitializedvarproblem(ICFG, EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmunivsolver(
+            uninitializedvarproblem, false);
+        cout << "IFDS UninitVar Analysis ..." << endl;
+        llvmunivsolver.solve();
+        cout << "IFDS UninitVar Analysis ended" << endl;
+        // FinalResultsJson += llvmunivsolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmunivsolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_UninitializedVariables: {
-          IFDSUnitializedVariables uninitializedvarproblem(ICFG, EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmunivsolver(
-              uninitializedvarproblem, false);
-          cout << "IFDS UninitVar Analysis ..." << endl;
-          llvmunivsolver.solve();
-          cout << "IFDS UninitVar Analysis ended" << endl;
-          // FinalResultsJson += llvmunivsolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmunivsolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_LinearConstantAnalysis: {
+        IFDSLinearConstantAnalysis lcaproblem(ICFG, EntryPoints);
+        LLVMIFDSSolver<LCAPair, LLVMBasedICFG &> llvmlcasolver(lcaproblem,
+                                                               true);
+        llvmlcasolver.solve();
+        FinalResultsJson += llvmlcasolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmlcasolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_LinearConstantAnalysis: {
-          IFDSLinearConstantAnalysis lcaproblem(ICFG, EntryPoints);
-          LLVMIFDSSolver<LCAPair, LLVMBasedICFG &> llvmlcasolver(lcaproblem,
-                                                                 true);
-          llvmlcasolver.solve();
-          FinalResultsJson += llvmlcasolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmlcasolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IDE_LinearConstantAnalysis: {
+        IDELinearConstantAnalysis lcaproblem(ICFG, EntryPoints);
+        LLVMIDESolver<const llvm::Value *, int64_t, LLVMBasedICFG &>
+            llvmlcasolver(lcaproblem, true);
+        llvmlcasolver.solve();
+        FinalResultsJson += llvmlcasolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmlcasolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IDE_LinearConstantAnalysis: {
-          IDELinearConstantAnalysis lcaproblem(ICFG, EntryPoints);
-          LLVMIDESolver<const llvm::Value *, int64_t, LLVMBasedICFG &>
-              llvmlcasolver(lcaproblem, true);
-          llvmlcasolver.solve();
-          FinalResultsJson += llvmlcasolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmlcasolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_ConstAnalysis: {
+        IFDSConstAnalysis constproblem(ICFG, IRDB.getAllMemoryLocations(),
+                                       EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmconstsolver(
+            constproblem, true);
+        llvmconstsolver.solve();
+        FinalResultsJson += llvmconstsolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmconstsolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_ConstAnalysis: {
-          IFDSConstAnalysis constproblem(ICFG, IRDB.getAllMemoryLocations(),
-                                         EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmconstsolver(
-              constproblem, true);
-          llvmconstsolver.solve();
-          FinalResultsJson += llvmconstsolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmconstsolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IFDS_SolverTest: {
+        IFDSSolverTest ifdstest(ICFG, EntryPoints);
+        LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> llvmifdstestsolver(
+            ifdstest, false);
+        cout << "IFDS Solvertest ..." << endl;
+        llvmifdstestsolver.solve();
+        cout << "IFDS Solvertest ended" << endl;
+        // FinalResultsJson += llvmifdstestsolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmifdstestsolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IFDS_SolverTest: {
-          IFDSSolverTest ifdstest(ICFG, EntryPoints);
-          LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &>
-              llvmifdstestsolver(ifdstest, false);
-          cout << "IFDS Solvertest ..." << endl;
-          llvmifdstestsolver.solve();
-          cout << "IFDS Solvertest ended" << endl;
-          // FinalResultsJson += llvmifdstestsolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmifdstestsolver.exportJson(graph_id);
-          }
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::IDE_SolverTest: {
+        IDESolverTest idetest(ICFG, EntryPoints);
+        LLVMIDESolver<const llvm::Value *, const llvm::Value *, LLVMBasedICFG &>
+            llvmidetestsolver(idetest, true);
+        llvmidetestsolver.solve();
+        FinalResultsJson += llvmidetestsolver.getAsJson();
+        if (PrintEdgeRecorder) {
+          llvmidetestsolver.exportJson(graph_id);
         }
-        case DataFlowAnalysisType::IDE_SolverTest: {
-          IDESolverTest idetest(ICFG, EntryPoints);
-          LLVMIDESolver<const llvm::Value *, const llvm::Value *,
-                        LLVMBasedICFG &>
-              llvmidetestsolver(idetest, true);
-          llvmidetestsolver.solve();
-          FinalResultsJson += llvmidetestsolver.getAsJson();
-          if (PrintEdgeRecorder) {
-            llvmidetestsolver.exportJson(graph_id);
-          }
-          break;
-        }
-        case DataFlowAnalysisType::Intra_Mono_FullConstantPropagation: {
-          const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
-          IntraMonoFullConstantPropagation intra(CFG, F);
-          LLVMIntraMonoSolver<pair<const llvm::Value *, unsigned>,
-                              LLVMBasedCFG &>
-              solver(intra, true);
-          solver.solve();
-          break;
-        }
-        case DataFlowAnalysisType::Intra_Mono_SolverTest: {
-          const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
-          IntraMonoSolverTest intra(CFG, F);
-          LLVMIntraMonoSolver<const llvm::Value *, LLVMBasedCFG &> solver(intra,
-                                                                          true);
-          solver.solve();
-          break;
-        }
-        case DataFlowAnalysisType::Inter_Mono_SolverTest: {
-          const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
-          InterMonoSolverTest inter(ICFG, EntryPoints);
-          CallString<typename InterMonoSolverTest::Node_t,
-                     typename InterMonoSolverTest::Domain_t, 3>
-              Context(&inter, &inter);
-          auto solver = make_LLVMBasedIMS(inter, Context, F, true);
-          solver->solve();
-          break;
-        }
-        case DataFlowAnalysisType::Inter_Mono_TaintAnalysis: {
-          const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
-          InterMonoTaintAnalysis inter(ICFG, EntryPoints);
-          CallString<typename InterMonoTaintAnalysis::Node_t,
-                     typename InterMonoTaintAnalysis::Domain_t, 10>
-              Context(&inter, &inter);
-          auto solver = make_LLVMBasedIMS(inter, Context, F, true);
-          solver->solve();
-          solver->dumpResults();
-          break;
-        }
-        case DataFlowAnalysisType::Plugin: {
-          vector<string> AnalysisPlugins =
-              VariablesMap["analysis-plugin"].as<vector<string>>();
+        break;
+      }
+      case DataFlowAnalysisType::Intra_Mono_FullConstantPropagation: {
+        const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
+        IntraMonoFullConstantPropagation intra(CFG, F);
+        LLVMIntraMonoSolver<pair<const llvm::Value *, unsigned>, LLVMBasedCFG &>
+            solver(intra, true);
+        solver.solve();
+        break;
+      }
+      case DataFlowAnalysisType::Intra_Mono_SolverTest: {
+        const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
+        IntraMonoSolverTest intra(CFG, F);
+        LLVMIntraMonoSolver<const llvm::Value *, LLVMBasedCFG &> solver(intra,
+                                                                        true);
+        solver.solve();
+        break;
+      }
+      case DataFlowAnalysisType::Inter_Mono_SolverTest: {
+        const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
+        InterMonoSolverTest inter(ICFG, EntryPoints);
+        CallString<typename InterMonoSolverTest::Node_t,
+                   typename InterMonoSolverTest::Domain_t, 3>
+            Context(&inter, &inter);
+        auto solver = make_LLVMBasedIMS(inter, Context, F, true);
+        solver->solve();
+        break;
+      }
+      case DataFlowAnalysisType::Inter_Mono_TaintAnalysis: {
+        const llvm::Function *F = IRDB.getFunction(EntryPoints.front());
+        InterMonoTaintAnalysis inter(ICFG, EntryPoints);
+        CallString<typename InterMonoTaintAnalysis::Node_t,
+                   typename InterMonoTaintAnalysis::Domain_t, 10>
+            Context(&inter, &inter);
+        auto solver = make_LLVMBasedIMS(inter, Context, F, true);
+        solver->solve();
+        solver->dumpResults();
+        break;
+      }
+      case DataFlowAnalysisType::Plugin: {
+        vector<string> AnalysisPlugins =
+            VariablesMap["analysis-plugin"].as<vector<string>>();
 #ifdef PHASAR_PLUGINS_ENABLED
-          AnalysisPluginController PluginController(
-              AnalysisPlugins, ICFG, EntryPoints, FinalResultsJson);
+        AnalysisPluginController PluginController(
+            AnalysisPlugins, ICFG, EntryPoints, FinalResultsJson);
 #endif
-          break;
-        }
-        case DataFlowAnalysisType::None: {
-          break;
-        }
-        default:
-          LOG_IF_ENABLE(BOOST_LOG_SEV(lg, CRITICAL)
-                        << "The analysis it not valid");
-          break;
+        break;
+      }
+      case DataFlowAnalysisType::None: {
+        break;
+      }
+      default:
+        LOG_IF_ENABLE(BOOST_LOG_SEV(lg, CRITICAL)
+                      << "The analysis it not valid");
+        break;
       }
     }
     STOP_TIMER("DFA Runtime", PAMM_SEVERITY_LEVEL::Core);
@@ -396,4 +393,4 @@ void AnalysisController::writeResults(std::string filename) {
   ofs << FinalResultsJson.dump(1);
 }
 
-}  // namespace psr
+} // namespace psr

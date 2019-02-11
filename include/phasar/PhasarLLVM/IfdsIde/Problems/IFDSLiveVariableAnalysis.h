@@ -27,9 +27,10 @@ class Value;
 namespace psr {
 class LLVMBasedICFG;
 
-class IFDSLiveVariableAnalysis : public DefaultIFDSTabulationProblem<
-                              const llvm::Instruction *, const llvm::Value *,
-                              const llvm::Function *, LLVMBasedICFG &> {
+class IFDSLiveVariableAnalysis
+    : public DefaultIFDSTabulationProblem<
+          const llvm::Instruction *, const llvm::Value *,
+          const llvm::Function *, LLVMBasedICFG &> {
 private:
   std::vector<std::string> EntryPoints;
 
@@ -39,7 +40,8 @@ public:
   typedef const llvm::Function *m_t;
   typedef LLVMBasedICFG &i_t;
 
-  IFDSLiveVariableAnalysis(i_t icfg, std::vector<std::string> EntryPoints = {"main"});
+  IFDSLiveVariableAnalysis(i_t icfg,
+                           std::vector<std::string> EntryPoints = {"main"});
 
   virtual ~IFDSLiveVariableAnalysis() = default;
 
