@@ -351,7 +351,15 @@ Then you can simply:
 Done!
 
 ### Compile Phasar
-First, if you would like to enable Swift analysis, you must set the environment variable for PHASAR to your `/phasar` directory. The Swift JSON file for defining sources and sinks can be found in `config/`.
+First, if you would like to enable Swift analysis, you must set the environment variable for PHASAR to your `phasar/` directory. The Swift JSON file for defining sources and sinks can be found in `config/`.
+
+Set the system's variables for the C and C++ compiler to clang:
+```
+$ export CC=/usr/local/bin/clang
+$ export CXX=/usr/local/bin/clang++
+```
+
+Make sure you have ran `git submodule update --init --recursive` in `phasar/`.
 
 Navigate into the Phasar directory. The following commands will do the job and compile the Phasar framework:
 
