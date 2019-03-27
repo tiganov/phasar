@@ -30,7 +30,11 @@ extern const std::string MetaDataKind;
 /// Specifies the directory in which important configuration files are located.
 extern const std::string ConfigurationDirectory;
 /// Specifies the directory in which Phasar is located.
+/// EDIT: THIS IS NOT CORRECT FOR GLOBAL ./phasar USAGE! Use PhasarPath instead
+/// ONLY USE FOR TESTS
 extern const std::string PhasarDirectory;
+/// Environment (true) path of Phasar (user set, must export path)
+extern const std::string PhasarPath;
 /// Name of the file storing all glibc function names.
 extern const std::string GLIBCFunctionListFileName;
 /// Name of the file storing all LLVM intrinsic function names.
@@ -45,7 +49,7 @@ extern boost::program_options::variables_map VariablesMap;
 /// Log file directory
 extern const std::string LogFileDirectory;
 /// Default Source- and Sink-Functions path
-extern const std::string DefaultSourceSinkFunctionsPath;
+extern std::string DefaultSourceSinkFunctionsPath;
 // Variables to be used in JSON export format
 /// Identifier for call graph export
 extern const std::string JsonCallGraphID;

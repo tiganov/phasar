@@ -229,6 +229,7 @@ int main(int argc, const char **argv) {
       bpo::options_description Config("Configuration file options");
       // clang-format off
     Config.add_options()
+      ("swift,s", bpo::value<bool>()->default_value(0),"Swift-aware analysis mode (1 or 0)")
 			("function,f", bpo::value<std::string>(), "Function under analysis (a mangled function name)")
 			("module,m", bpo::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing()->notifier(validateParamModule), "Path to the module(s) under analysis")
       ("entry-points,E", bpo::value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), "Set the entry point(s) to be used")
@@ -302,6 +303,17 @@ int main(int argc, const char **argv) {
         if (VariablesMap.count("config")) {
           std::cout << "Configuration file: "
                     << VariablesMap["config"].as<std::string>() << '\n';
+        }
+        if (VariablesMap.count("swift")) {
+          if (VariablesMap["swift"].as<bool>())
+          {
+            psr::DefaultSourceSinkFunctionsPath = (psr::PhasarPath + "/config/swift-source-sink-function.json");
+          }
+          std::cout << "Swift analysis: "
+                    << VariablesMap["swift"].as<bool>()
+                    << '\n';
+           std::cout << "Source/Sink JSON file: "
+                  << bfs::path(psr::DefaultSourceSinkFunctionsPath).filename() << '\n';
         }
         if (VariablesMap.count("project-id")) {
           std::cout << "Project ID: "

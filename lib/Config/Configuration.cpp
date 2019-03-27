@@ -34,6 +34,9 @@ const std::string ConfigurationDirectory([]() {
              ? phasar_config
              : "config/";
 }());
+const std::string PhasarPath([]() {
+  return getenv("PHASAR");
+}());
 const std::string PhasarDirectory([]() {
   std::string curr_path = bfs::current_path().string();
   size_t i = curr_path.rfind("build", curr_path.length());
@@ -47,8 +50,8 @@ const std::string HeaderSearchPathsFileName("standard_header_paths.conf");
 const std::string CompileCommandsJson("compile_commands.json");
 bpo::variables_map VariablesMap;
 const std::string LogFileDirectory("log/");
-const std::string DefaultSourceSinkFunctionsPath(
-    PhasarDirectory + "config/phasar-source-sink-function.json");
+std::string DefaultSourceSinkFunctionsPath(
+    PhasarPath + "/config/phasar-source-sink-function.json");
 const std::string JsonCallGraphID("CallGraph");
 const std::string JsonTypeHierarchyID("TypeHierarchy");
 const std::string JsonPointToGraphID("PointsToGraph");

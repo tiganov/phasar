@@ -197,6 +197,17 @@ AnalysisController::AnalysisController(
       switch (analysis) {
       case DataFlowAnalysisType::IFDS_TaintAnalysis: {
         TaintSensitiveFunctions TSF;
+        if (VariablesMap["swift"].as<bool>())
+        {
+          try {
+            TSF.importSourceSinkFunctions(DefaultSourceSinkFunctionsPath);
+          } catch (std::exception e)
+          {
+            cout << "Config source/sink file not found: " << DefaultSourceSinkFunctionsPath << endl;
+            cout << "IFDS Taint Analysis ended" << endl;
+            break;
+          }
+        }
         IFDSTaintAnalysis TaintAnalysisProblem(ICFG, CH, IRDB, TSF,
                                                EntryPoints);
         LLVMIFDSSolver<const llvm::Value *, LLVMBasedICFG &> LLVMTaintSolver(
