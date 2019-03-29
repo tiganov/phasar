@@ -4,6 +4,10 @@
 			"Args": [],
 			"Return": true
 		},
+		"source() -> Swift.Int": {
+			"Args": [],
+			"Return": true
+		},
 		"read": {
 			"Args": [0, 1, 3],
 			"Return": false
@@ -11,6 +15,9 @@
 	},
 	"Sink Functions": {
 		"sink(int)": {
+			"Args": [0]
+		},
+		"sink(value: Swift.Int) -> ()": {
 			"Args": [0]
 		},
 		"write": {

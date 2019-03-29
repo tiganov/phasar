@@ -9,6 +9,9 @@
 
 #include <iterator>
 #include <ostream>
+#include <sstream>
+#include <fstream>
+#include <iostream> 
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/find.hpp>
@@ -32,6 +35,41 @@ string cxx_demangle(const string &mangled_name) {
   string result((status == 0 && demangled != NULL) ? demangled : mangled_name);
   free(demangled);
   return result;
+}
+
+string swift_demangle(const string &mangled_name) {
+  // Here, we call the swift-demangle executable (which exact one depends on OS)
+  // to demangle the given swift function name.
+  // It's a bit janky, especially since it uses a file as temporary storage
+  std::string DemanglerDir = (std::string)std::getenv("PHASAR") + (std::string)"/utils/demangler/";
+  std::string Command = "/." + DemanglerDir;
+  #ifdef __linux__
+  Command += "swift-demangle-linux";
+  #elif __APPLE__ || __MACH__
+  Command += "swift-demangle-macos";
+  #else
+  std::err << "Unknown OS! Cannot demangle Swift functions." << std::endl;
+  break;
+  #endif
+  Command += " -compact '" + mangled_name + "' > " + DemanglerDir + "out.txt";
+  std::system(Command.c_str());
+  std::ifstream OutFile;
+  OutFile.open(((std::string)DemanglerDir + "out.txt"));
+  std::string DemangledString;
+  std::getline(OutFile, DemangledString);
+  std::string RemoveCommand = "rm -f " + DemanglerDir + "out.txt";
+  std::system(RemoveCommand.c_str());
+  OutFile.close();
+  // snip off program name (if it exists)
+  try {
+    // the way this is done may present problems
+    DemangledString = DemangledString.substr(DemangledString.find('.')+1); 
+  } catch (std::exception e)
+  {
+    // do nothing, could not find '.'
+  }
+  // std::cout << "Demangled string: " + DemangledString << std::endl;
+  return DemangledString;
 }
 
 bool isConstructor(const string &mangled_name) {

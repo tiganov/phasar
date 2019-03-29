@@ -43,6 +43,7 @@ namespace psr {
   exit(-1);
 
 std::string cxx_demangle(const std::string &mangled_name);
+std::string swift_demangle(const std::string &mangled_name);
 
 bool isConstructor(const std::string &mangled_name);
 
