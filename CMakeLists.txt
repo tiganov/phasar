@@ -4,7 +4,7 @@ project (phasar)
 set(CMAKE_PROJECT_NAME "phasar")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -19,6 +19,7 @@ endif()
 
 # Enable testing
 enable_testing()
+
 
 # TODO: allow Phasar to be build as a llvm drop-in as well
 # if (NOT DEFINED LLVM_MAIN_SRC_DIR)
@@ -65,6 +66,7 @@ endif()
 
 # Workaround: Remove Plugins for MacOS for now
 if(APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -undefined dynamic_lookup")
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPHASAR_PLUGINS_ENABLED")
 endif()
