@@ -23,7 +23,7 @@ Installation
 Notes: Some of these instructions are borrowed from the original Readme and some from phasar.org. This fork has modified `CMakeLists.txt` in order to be MacOS compatible. 
 
 ### Dependencies
-* LLVM/Clang 5.0 (you can use the custom installation script under `/utils` but this does *not* work on Mac)
+* LLVM/Clang 5.0.0 or 5.0.1 (you can use the custom installation script under `/utils` but this does *not* work on Mac)
 * SQLite 3.11.0 or newer (libsqlite3-dev)
 * MySqlConnector (libmysqlcppconn-dev)
 * LibCurl (libcurl4-openssl-dev)
@@ -38,13 +38,16 @@ To install most of these dependencies on a Debian or Ubuntu Linux you can use th
 
 You may need to install `python-dev`, `subversion`, and maybe some others. If you get any errors, it should be clear which dependencies you are missing.
 
-To install these dependencies on a Mac you can use Homebrew’s bundle functionality to install all dependencies (execute this directly in the cloned repository):  
+To install these dependencies on a Mac you can use Homebrew’s bundle functionality to install all dependencies except for LLVM (execute this directly in the cloned repository):  
 `brew bundle`
+
+#### Installing LLVM/Clang 5.0.0/5.0.1 on Mac
+Using `brew install llvm@5` does not work because that would install `5.0.2`, which is currently unsupported. You must find a way to install `5.0.0` or `5.0.1` on Mac. This is a problem that is actively being solved.
 
 ### Compile Phasar
 First, if you would like to enable Swift analysis, you must set the environment variable for PHASAR to your `phasar/` directory. The Swift JSON file for defining sources and sinks can be found in `config/`.
 
-Set the system's variables for the C and C++ compiler to clang:
+Set the system's variables for the C and C++ compiler to clang. On Mac this may be optional.
 
 Possible Linux example:
 ```
@@ -84,6 +87,11 @@ To be able to run `phasar` anywhere, run the following in `build/`
 `$ sudo make install`
 
 Please be careful and check if errors occur during the compilation.
+
+#### IDEs
+I recommend using CLion since it is really easy to get a CMake project going with it. XCode is another alternative but is more tricky to setup CMake with.
+
+### Usage
 
 When using CMake to compile Phasar the following optional parameters can be used:
 
