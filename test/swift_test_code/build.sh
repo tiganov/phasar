@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 OUT_DIR="bin/"
 OUT_LL="out.ll"

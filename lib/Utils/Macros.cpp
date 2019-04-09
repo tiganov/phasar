@@ -83,6 +83,36 @@ string swift_demangle(const string &mangled_name) {
   return DemangledString;
 }
 
+string instr_demangle(const string &mangled_name) {
+  if (!VariablesMap["swift"].as<bool>())
+  { 
+    return mangled_name;
+  }
+  // Here, we call the swift-demangle executable (which exact one depends on OS)
+  // to demangle the given swift function name.
+  // It's a bit janky, especially since it uses a file as temporary storage
+  std::string DemanglerDir = (std::string)std::getenv("PHASAR") + (std::string)"/utils/demangler/";
+  std::string Command = "/." + DemanglerDir;
+  #ifdef __linux__
+  Command += "instr-swift-demangle-linux.sh";
+  #elif __APPLE__ || __MACH__
+  Command += "instr-swift-demangle-macos.sh";
+  #else
+  std::err << "Unknown OS! Cannot demangle Swift instructions." << std::endl;
+  break;
+  #endif
+  Command += " '" + mangled_name + "' " + DemanglerDir + " > " + DemanglerDir + "out.txt";
+  std::system(Command.c_str());
+  std::ifstream OutFile;
+  OutFile.open(((std::string)DemanglerDir + "out.txt"));
+  std::string DemangledString;
+  std::getline(OutFile, DemangledString);
+  std::string RemoveCommand = "rm -f " + DemanglerDir + "out.txt";
+  std::system(RemoveCommand.c_str());
+  OutFile.close();
+  return DemangledString;
+}
+
 bool isConstructor(const string &mangled_name) {
   // WARNING: Doesn't work for templated classes, should
   // the best way to do it I can think of is to use a lexer

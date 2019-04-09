@@ -46,6 +46,10 @@ std::string demangle(const std::string &mangled_name);
 std::string cxx_demangle(const std::string &mangled_name);
 std::string swift_demangle(const std::string &mangled_name);
 
+// demangle strings (instructions) that contain mangled function names
+// slightly different than regular demangling (don't snip off anything)
+std::string instr_demangle(const std::string &mangled_name);
+
 bool isConstructor(const std::string &mangled_name);
 
 std::string debasify(const std::string &name);
