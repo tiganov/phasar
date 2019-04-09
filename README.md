@@ -20,7 +20,9 @@ This fork is for implementing Swift aware analysis on top of Phasar and developi
 Installation
 ------------
 
-Notes: Some of these instructions are borrowed from the original Readme and some from phasar.org. This fork has modified `CMakeLists.txt` in order to be MacOS compatible. 
+Notes: Some of these instructions are borrowed from the original Readme and some from phasar.org. This fork has modified `CMakeLists.txt` in order to be MacOS compatible. You can feel free to try changing the `CMAKE_CXX_STANDARD` version from `14` to `17` in `CMakeLists.txt`.
+
+#### Note: Reference macOS version is 10.14.4
 
 ### Dependencies
 * LLVM/Clang 5.0.0 or 5.0.1 (you can use the custom installation script under `/utils` but this does *not* work on Mac)
