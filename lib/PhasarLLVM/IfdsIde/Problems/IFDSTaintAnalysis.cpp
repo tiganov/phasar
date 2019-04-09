@@ -96,13 +96,7 @@ IFDSTaintAnalysis::getCallFlowFunction(IFDSTaintAnalysis::n_t callStmt,
   auto &lg = lg::get();
   LOG_IF_ENABLE(BOOST_LOG_SEV(lg, DEBUG)
                 << "IFDSTaintAnalysis::getCallFlowFunction()");
-  string FunctionName;
-  if (VariablesMap["swift"].as<bool>())
-  {
-    FunctionName = swift_demangle(destMthd->getName().str());
-  } else {
-    FunctionName = cxx_demangle(destMthd->getName().str());
-  }
+  string FunctionName = demangle(destMthd->getName().str());
   // Check if a source or sink function is called:
   // We then can kill all data-flow facts not following the called function.
   // The respective taints or leaks are then generated in the corresponding
@@ -149,13 +143,7 @@ IFDSTaintAnalysis::getCallToRetFlowFunction(
                 << "IFDSTaintAnalysis::getCallToRetFlowFunction()");
   // Process the effects of source or sink functions that are called
   for (auto *Callee : icfg.getCalleesOfCallAt(callSite)) {
-    string FunctionName;
-    if (VariablesMap["swift"].as<bool>())
-    {
-      FunctionName = swift_demangle(Callee->getName().str());
-    } else {
-      FunctionName = cxx_demangle(Callee->getName().str());
-    }
+    string FunctionName = demangle(Callee->getName().str());
     LOG_IF_ENABLE(BOOST_LOG_SEV(lg, DEBUG) << "F:" << Callee->getName().str());
     LOG_IF_ENABLE(BOOST_LOG_SEV(lg, DEBUG) << "demangled F:" << FunctionName);
     if (SourceSinkFunctions.isSource(FunctionName)) {
@@ -225,13 +213,7 @@ IFDSTaintAnalysis::getSummaryFlowFunction(IFDSTaintAnalysis::n_t callStmt,
                                           IFDSTaintAnalysis::m_t destMthd) {
   SpecialSummaries<IFDSTaintAnalysis::d_t> &specialSummaries =
       SpecialSummaries<IFDSTaintAnalysis::d_t>::getInstance();
-  string FunctionName;
-  if (VariablesMap["swift"].as<bool>())
-  {
-    FunctionName = swift_demangle(destMthd->getName().str());
-  } else {
-    FunctionName = cxx_demangle(destMthd->getName().str());
-  }
+  string FunctionName = demangle(destMthd->getName().str());
   // If we have a special summary, which is neither a source function, nor
   // a sink function, then we provide it to the solver.
   if (specialSummaries.containsSpecialSummary(FunctionName) &&

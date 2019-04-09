@@ -42,6 +42,7 @@ namespace psr {
   std::cerr << STRING << std::endl;                                            \
   exit(-1);
 
+std::string demangle(const std::string &mangled_name);
 std::string cxx_demangle(const std::string &mangled_name);
 std::string swift_demangle(const std::string &mangled_name);
 

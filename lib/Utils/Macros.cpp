@@ -23,10 +23,21 @@
 #include <cxxabi.h>
 
 #include <phasar/Utils/Macros.h>
+#include <phasar/Config/Configuration.h>
+
 using namespace std;
 using namespace psr;
 
 namespace psr {
+
+string demangle(const string &mangled_name) {
+    if (VariablesMap["swift"].as<bool>())
+    {
+        return swift_demangle(mangled_name);
+    } else {
+        return cxx_demangle(mangled_name);
+    }
+}
 
 string cxx_demangle(const string &mangled_name) {
   int status = 0;
